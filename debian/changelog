@@ -1,3 +1,15 @@
+google-compute-engine-oslogin (20210728.00-0ubuntu1) impish; urgency=medium
+
+  * New upstream version 20210728.00. (LP: #1938289)
+    - use IP address for calling the metadata server (#63).
+    - throw exceptions in cache_refresh (#64).
+    - JSON object cleanup (#65).
+  * d/p/0002-fix-double-free-in-ParseJSONToKey.patch: Add
+    patch to fix double free in ParseJsonToKey.
+  * d/links: Update links w/ respective .so shipped.
+
+ -- Utkarsh Gupta <utkarsh.gupta@canonical.com>  Thu, 05 Aug 2021 18:16:41 +0530
+
 google-compute-engine-oslogin (20210618.00-0ubuntu1) impish; urgency=medium
 
   * New upstream version 20210618.00. (LP: #1938289)
