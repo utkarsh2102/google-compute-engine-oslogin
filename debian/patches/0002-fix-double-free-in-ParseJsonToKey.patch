@@ -1,0 +1,24 @@
+From a1e2623dbcfd43398789bdd89c05bfce0fca1407 Mon Sep 17 00:00:00 2001
+From: Liam Hopkins <liamh@google.com>
+Date: Thu, 5 Aug 2021 15:05:53 -0700
+Subject: [PATCH] fix double free in ParseJsonToKey
+
+---
+ src/oslogin_utils.cc | 2 --
+ 1 file changed, 2 deletions(-)
+
+--- a/src/oslogin_utils.cc
++++ b/src/oslogin_utils.cc
+@@ -815,12 +815,10 @@
+ 
+ 
+   if (!json_object_object_get_ex(root, key.c_str(), &json_response)) {
+-    json_object_put(root);
+     goto cleanup;
+   }
+ 
+   if (!(c_response = json_object_get_string(json_response))) {
+-    json_object_put(root);
+     goto cleanup;
+   }
+ 
