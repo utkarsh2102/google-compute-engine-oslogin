@@ -1,3 +1,17 @@
+google-compute-engine-oslogin (20210907.00-0ubuntu1) impish; urgency=medium
+
+  * New upstream version 20210907.00. (LP: #1944718)
+    - fix packaging for authorized_keys_sk (#68).
+    - fix double free in ParseJsonToKey (#70).
+    - include cstdlib for exit (#75).
+    - use sigaction for signals (#76).
+  * d/p/0002-fix-double-free-in-ParseJsonToKey.patch: drop
+    patch as it is included in this upstream release.
+  * d/links: Update links w/ respective .so shipped
+  * d/lintian-overrides: no manpage for google_authorized_keys_sk.
+
+ -- Utkarsh Gupta <utkarsh.gupta@canonical.com>  Thu, 23 Sep 2021 16:45:25 +0530
+
 google-compute-engine-oslogin (20210728.00-0ubuntu1) impish; urgency=medium
 
   * New upstream version 20210728.00. (LP: #1938289)
