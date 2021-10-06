@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <string>
 
 #include <signal.h>
+#include <string.h>
 
 #include <oslogin_utils.h>
 
@@ -29,6 +30,7 @@ using oslogin_utils::HttpGet;
 using oslogin_utils::ParseJsonToSuccess;
 using oslogin_utils::ParseJsonToEmail;
 using oslogin_utils::ParseJsonToSshKeys;
+using oslogin_utils::ParseJsonToSshKeysSk;
 using oslogin_utils::UrlEncode;
 using oslogin_utils::kMetadataServerUrl;
 
@@ -39,7 +41,7 @@ void sigpipe_handler(int signo) {
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
-    cout << "usage: authorized_keys [username]" << endl;
+    cout << "usage: authorized_keys_sk [username]" << endl;
     return 1;
   }
 
@@ -52,8 +54,10 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  bool is_sa = (strncmp(argv[1], "sa_", 3) == 0);
   std::stringstream url;
-  url << kMetadataServerUrl << "users?username=" << UrlEncode(argv[1]);
+  url << kMetadataServerUrl << "users?username=" << UrlEncode(argv[1])
+      << "&view=securityKey";
   string user_response;
   long http_code = 0;
   if (!HttpGet(url.str(), &user_response, &http_code) ||
@@ -61,7 +65,6 @@ int main(int argc, char* argv[]) {
     if (http_code == 404) {
       // Return 0 if the user is not an oslogin user. If we returned a failure
       // code, we would populate auth.log with useless error messages.
-      // This exits successfully but prints no keys.
       return 0;
     }
     return 1;
@@ -88,7 +91,13 @@ int main(int argc, char* argv[]) {
   }
   // At this point, we've verified the user can log in. Grab the ssh keys from
   // the user response.
-  std::vector<string> ssh_keys = ParseJsonToSshKeys(user_response);
+  std::vector<string> ssh_keys;
+  if (is_sa) {
+    // Service accounts should continue to function when SK is enabled.
+    ssh_keys = ParseJsonToSshKeys(user_response);
+  } else {
+    ssh_keys = ParseJsonToSshKeysSk(user_response);
+  }
   for (size_t i = 0; i < ssh_keys.size(); i++) {
     cout << ssh_keys[i] << endl;
   }
