@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20210907.00-0ubuntu1~21.04.0) hirsute; urgency=medium
+
+  * No-change rebuild for Hirsute. (LP: #1944718)
+
+ -- Utkarsh Gupta <utkarsh.gupta@canonical.com>  Wed, 06 Oct 2021 16:45:43 +0530
+
 google-compute-engine-oslogin (20210907.00-0ubuntu1) impish; urgency=medium
 
   * New upstream version 20210907.00. (LP: #1944718)
