@@ -1,2 +1,1 @@
 0001-set-LDFLAGS-to-prevent-undefs.patch
-0002-fix-double-free-in-ParseJsonToKey.patch
