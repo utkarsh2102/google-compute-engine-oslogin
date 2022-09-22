@@ -1,0 +1,31 @@
+From: Balint Reczey <balint.reczey@canonical.com>
+Date: Mon, 7 Jan 2019 14:15:00 +0700
+Subject: Add -lboost_regex to libs
+
+---
+ src/Makefile  | 2 +-
+ test/Makefile | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -7,7 +7,7 @@
+ CXXFLAGS = $(FLAGS)
+ 
+ LDFLAGS = -shared -Wl,-z,defs -Wl,-soname,$(SONAME)
+-LDLIBS = -lcurl -ljson-c
++LDLIBS = -lcurl -ljson-c -lboost_regex
+ PAMLIBS = -lpam $(LDLIBS)
+ 
+ # Paths which should be overrideable.
+--- a/test/Makefile
++++ b/test/Makefile
+@@ -8,7 +8,7 @@
+ NEW_TEST_RUNNER = ./new_test_runner --gtest_output=xml
+ CPPFLAGS += -I$(TOPDIR)/src/include -I/usr/include/json-c -I$(GTEST_DIR) -isystem $(GTEST_DIR)/include
+ CXXFLAGS += -g -Wall -Wextra -std=c++11
+-LDLIBS = -lcurl -ljson-c -lpthread
++LDLIBS = -lcurl -ljson-c -lpthread -lboost_regex
+ 
+ all : test_runner new_test_runner non_network_tests
+ 

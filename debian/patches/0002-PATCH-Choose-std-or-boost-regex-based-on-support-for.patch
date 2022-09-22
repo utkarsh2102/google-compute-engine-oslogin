@@ -1,0 +1,27 @@
+From: Balint Reczey <balint.reczey@canonical.com>
+Date: Fri, 14 Sep 2018 19:00:39 +0200
+Subject: [PATCH] Choose std:: or boost:: regex based on support for C++11
+
+instead of checking GCC versions.
+
+This is more reliable since C++11 support may be disabled with newer GCCs
+and it can be enabled in older ones by passing -std=c++11.
+
+Fixes #650.
+---
+ src/utils.cc | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+--- a/src/oslogin_utils.cc
++++ b/src/oslogin_utils.cc
+@@ -28,9 +28,7 @@
+ #include <sstream>
+ #include <json_object.h>
+ 
+-#if defined(__clang__) || __GNUC__ > 4 || \
+-    (__GNUC__ == 4 &&                     \
+-     (__GNUC_MINOR__ > 9 || (__GNUC_MINOR__ == 9 && __GNUC_PATCHLEVEL__ > 0)))
++#if defined(__clang__) || __cplusplus >= 201103L
+ #include <regex>
+ #define Regex std
+ #else

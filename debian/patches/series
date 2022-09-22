@@ -1,1 +1,4 @@
 0001-set-LDFLAGS-to-prevent-undefs.patch
+0002-PATCH-Choose-std-or-boost-regex-based-on-support-for.patch
+0003-Add-lboost_regex-to-libs.patch
+0004-Use-C-style-iteration-without-auto-over-array-instea.patch
