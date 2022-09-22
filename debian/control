@@ -5,6 +5,7 @@ Priority: optional
 Build-Depends: cmake,
                debhelper (>= 9),
                dh-systemd,
+               libboost-regex-dev,
                libcurl4-openssl-dev,
                libgtest-dev,
                libjson-c-dev,
