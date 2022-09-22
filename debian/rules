@@ -5,7 +5,7 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 export VERSION=$(shell dpkg-parsechangelog -S Version | sed 's/-.*//')
 
 %:
-	dh $@
+	dh $@ --with systemd
 
 override_dh_auto_configure:
 	cp -r /usr/src/gtest/ ./

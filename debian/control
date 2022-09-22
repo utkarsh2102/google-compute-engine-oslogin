@@ -3,7 +3,8 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Section: admin
 Priority: optional
 Build-Depends: cmake,
-               debhelper (>> 9),
+               debhelper (>= 9),
+               dh-systemd,
                libcurl4-openssl-dev,
                libgtest-dev,
                libjson-c-dev,
