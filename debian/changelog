@@ -1,3 +1,19 @@
+google-compute-engine-oslogin (20220714.00-0ubuntu1) kinetic; urgency=medium
+
+  * New upstream version 20220714.00. (LP: #1995620)
+    - no message if no groups (#78).
+    - remove deprecated binary (#79).
+    - Reauth error (#81).
+    - Fix build for EL9. (#82).
+    - pam login: split conditions for logging (#83).
+    - strip json-c version symbol (#84).
+  * d/links: Update links w/ respective .so shipped.
+  * d/lintian-overrides: google_oslogin_control has been deprecated.
+  * d/lintian-overrides: update warning message, d'oh.
+  * d/copyright: drop superfluous file patterns.
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Thu, 03 Nov 2022 16:21:52 +0100
+
 google-compute-engine-oslogin (20210907.00-0ubuntu1~20.04.0) focal; urgency=medium
 
   * No-change rebuild for Focal. (LP: #1944718)
