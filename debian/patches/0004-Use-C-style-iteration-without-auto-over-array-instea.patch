@@ -1,0 +1,34 @@
+From: Balint Reczey <balint.reczey@canonical.com>
+Date: Sun, 16 Sep 2018 23:33:14 +0200
+Subject: [PATCH 3/3] Use C style iteration without auto over array instead of
+ range-based for loop
+
+This allows compiling tests without C++11 support.
+---
+ test/oslogin_utils_test.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/test/oslogin_utils_test.cc
++++ b/test/oslogin_utils_test.cc
+@@ -545,8 +545,8 @@
+ TEST(ValidateUserNameTest, ValidateValidUserNames) {
+   string cases[] = {"user",  "_",   ".",    ".abc_",
+                     "_abc-", "ABC", "A_.-", "ausernamethirtytwocharacterslong"};
+-  for (auto test_user : cases) {
+-    ASSERT_TRUE(ValidateUserName(test_user));
++  for (int i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
++    ASSERT_TRUE(ValidateUserName(cases[i]));
+   }
+ }
+ 
+@@ -564,8 +564,8 @@
+       "usernamethirtythreecharacterslong",
+       "../../etc/shadow",
+   };
+-  for (auto test_user : cases) {
+-    ASSERT_FALSE(ValidateUserName(test_user));
++  for (int i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
++    ASSERT_FALSE(ValidateUserName(cases[i]));
+   }
+ }
+ 

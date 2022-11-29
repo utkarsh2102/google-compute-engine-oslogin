@@ -1,3 +1,17 @@
+google-compute-engine-oslogin (20210907.00-0ubuntu1~16.04.0) xenial; urgency=medium
+
+  * No-change rebuild for Xenial.
+    - Downgrade debhelper to 9.
+    - Revert to using dh-systemd because Xenial does not have the
+      debhelper version making dh-systemd obsolete.
+    - Build-depend on libboost-regex-dev for regex support.
+    - Refresh d/patches.
+    - Link with boost for regex support.
+    - Free tests from C++11 constructs to let them being compiled without
+      C++11 support.
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Tue, 20 Sep 2022 14:43:50 +0530
+
 google-compute-engine-oslogin (20210907.00-0ubuntu1) impish; urgency=medium
 
   * New upstream version 20210907.00. (LP: #1944718)
