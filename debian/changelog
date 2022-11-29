@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20220714.00-0ubuntu1~16.04.0) xenial; urgency=medium
+
+  * No-change rebuild for Xenial.
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Tue, 29 Nov 2022 21:17:34 +0530
+
 google-compute-engine-oslogin (20220714.00-0ubuntu1~18.04.0) bionic; urgency=medium
 
   * No-change rebuild for Bionic. (LP: #1995620)
