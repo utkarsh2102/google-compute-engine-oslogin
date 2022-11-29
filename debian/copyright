@@ -8,12 +8,6 @@ Copyright: 2017-2020, Google Inc
 License: Apache-2.0
 
 Files: LICENSE
-       google_oslogin_control
-       packaging/build_deb.sh
-       packaging/build_rpm.sh
-       packaging/common.sh
-       packaging/daisy_startupscript_deb.sh
-       packaging/daisy_startupscript_rpm.sh
        packaging/debian/copyright
        packaging/google-compute-engine-oslogin.spec
        src/authorized_keys/*

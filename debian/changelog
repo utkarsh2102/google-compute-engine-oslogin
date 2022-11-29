@@ -1,3 +1,25 @@
+google-compute-engine-oslogin (20220714.00-0ubuntu1~18.04.0) bionic; urgency=medium
+
+  * No-change rebuild for Bionic. (LP: #1995620)
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Fri, 04 Nov 2022 15:40:52 +0100
+
+google-compute-engine-oslogin (20220714.00-0ubuntu1) kinetic; urgency=medium
+
+  * New upstream version 20220714.00. (LP: #1995620)
+    - no message if no groups (#78).
+    - remove deprecated binary (#79).
+    - Reauth error (#81).
+    - Fix build for EL9. (#82).
+    - pam login: split conditions for logging (#83).
+    - strip json-c version symbol (#84).
+  * d/links: Update links w/ respective .so shipped.
+  * d/lintian-overrides: google_oslogin_control has been deprecated.
+  * d/lintian-overrides: update warning message, d'oh.
+  * d/copyright: drop superfluous file patterns.
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Thu, 03 Nov 2022 16:21:52 +0100
+
 google-compute-engine-oslogin (20210907.00-0ubuntu1~16.04.0) xenial; urgency=medium
 
   * No-change rebuild for Xenial.
@@ -12,6 +34,12 @@ google-compute-engine-oslogin (20210907.00-0ubuntu1~16.04.0) xenial; urgency=med
 
  -- Utkarsh Gupta <utkarsh@ubuntu.com>  Tue, 20 Sep 2022 14:43:50 +0530
 
+google-compute-engine-oslogin (20210907.00-0ubuntu1~18.04.0) bionic; urgency=medium
+
+  * No-change rebuild for Bionic. (LP: #1944718)
+
+ -- Utkarsh Gupta <utkarsh.gupta@canonical.com>  Wed, 06 Oct 2021 17:28:38 +0530
+
 google-compute-engine-oslogin (20210907.00-0ubuntu1) impish; urgency=medium
 
   * New upstream version 20210907.00. (LP: #1944718)
@@ -25,6 +53,13 @@ google-compute-engine-oslogin (20210907.00-0ubuntu1) impish; urgency=medium
   * d/lintian-overrides: no manpage for google_authorized_keys_sk.
 
  -- Utkarsh Gupta <utkarsh.gupta@canonical.com>  Thu, 23 Sep 2021 16:45:25 +0530
+
+google-compute-engine-oslogin (20210728.00-0ubuntu1~18.04.0) bionic; urgency=medium
+
+  * No-change rebuild for Bionic. (LP: #1938289)
+    - Lower dh-compat to 11.
+
+ -- Utkarsh Gupta <utkarsh.gupta@canonical.com>  Fri, 03 Sep 2021 14:25:50 +0530
 
 google-compute-engine-oslogin (20210728.00-0ubuntu1) impish; urgency=medium
 
