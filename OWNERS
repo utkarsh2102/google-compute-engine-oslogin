@@ -2,9 +2,15 @@
 # See the OWNERS docs at https://go.k8s.io/owners
 
 approvers:
-  - hopkiw
-  - illfelder
-reviewers:
-  - hopkiw
-  - illfelder
-  - jaiminsh
+  - a-crate
+  - bkatyl
+  - chaitanyakulkarni28
+  - dorileo
+  - drewhli
+  - elicriffield
+  - jjerger
+  - karnvadaliya
+  - koln67
+  - quintonamore
+  - vorakl
+  - zmarano
