@@ -16,6 +16,8 @@
 #include <pthread.h>
 #include <pwd.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <syslog.h>
 
 #include <string>
@@ -220,11 +222,6 @@ bool ParseJsonToGroups(const string& json, std::vector<Group>* groups);
 // Parses a JSON users response, storing results in a provided string vector.
 bool ParseJsonToUsers(const string& json, std::vector<string>* users);
 
-// Adds users and associated array of char* to provided buffer and store pointer
-// to array in result.gr_mem.
-bool AddUsersToGroup(std::vector<string> users, struct group* result,
-                       BufferManager* buf, int* errnop);
-
 // Gets group matching name.
 bool GetGroupByName(string name, struct group* grp, BufferManager* buf, int* errnop);
 
@@ -281,4 +278,38 @@ bool ContinueSession(bool alt, const string& email, const string& user_token,
 
 // Returns user information from the metadata server.
 bool GetUser(const string& username, string* response);
+
+// Initializes the global sys logger instance setting it up with the
+// provided ident and app, so the syslog entries will look like:
+// <<ident>>: <<app>>: <<Message>>
+// For google_authorized_keys for example, it would look like:
+// sshd: google_authorized_keys: <<Message>>
+extern void SetupSysLog(const char *ident, const char *app);
+
+// Closes the sys logger.
+extern void CloseSysLog();
+
+// Prints out to sys logger with ERR severity.
+extern void SysLogErr(const char *fmt, ...);
+
+// AuthoOptions wraps authorization options.
+struct AuthOptions {
+  // security_key determines if the MDS "/users?..." should use
+  // the view=securityKey parameter.
+  bool security_key;
+
+  // fingerprint is used when authorizing certificate based
+  // authentication sessions.
+  char *fingerprint;
+
+  // fp_len is the fingerprint string length;
+  size_t fp_len;
+};
+
+// Perform user authorization logic & create users files and google sudoers, returns true if successful,
+// and false otherwise.
+bool AuthorizeUser(const char *user_name, struct AuthOptions opts, string *user_response);
+
+// Given a file_path extracts the file name only. file_path must be a null terminated string.
+const char *FileName(const char *file_path);
 }  // namespace oslogin_utils
