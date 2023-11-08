@@ -1,4 +1,4 @@
-// Copyright 2020 Google Inc. All Rights Reserved.
+// Copyright 2023 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,17 +13,10 @@
 // limitations under the License.
 
 #define PAM_SM_ACCOUNT
-#include <security/pam_appl.h>
 #include <security/pam_modules.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <syslog.h>
-#include <unistd.h>
 
-#include <iostream>
-#include <fstream>
 #include <sstream>
-#include <string>
 #include <map>
 
 #include <compat.h>
@@ -31,100 +24,24 @@
 
 using oslogin_utils::ContinueSession;
 using oslogin_utils::GetUser;
-using oslogin_utils::HttpGet;
-using oslogin_utils::HttpPost;
-using oslogin_utils::kMetadataServerUrl;
 using oslogin_utils::ParseJsonToChallenges;
 using oslogin_utils::ParseJsonToKey;
 using oslogin_utils::ParseJsonToEmail;
-using oslogin_utils::ParseJsonToSuccess;
 using oslogin_utils::StartSession;
-using oslogin_utils::UrlEncode;
 using oslogin_utils::ValidateUserName;
 
-static const char kUsersDir[] = "/var/google-users.d/";
-
 extern "C" {
-PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc,
-                                const char **argv) {
+
+PAM_EXTERN int
+pam_sm_setcred(pam_handle_t* pamh, int flags, int argc, const char** argv) {
+  return PAM_SUCCESS;
+}
+
+PAM_EXTERN int
+pam_sm_authenticate(pam_handle_t* pamh, int flags, int argc,
+                    const char** argv) {
   const char *user_name;
-  if (pam_get_user(pamh, &user_name, NULL) != PAM_SUCCESS) {
-    PAM_SYSLOG(pamh, LOG_INFO, "Could not get pam user.");
-    return PAM_AUTH_ERR;
-  }
 
-  if (!ValidateUserName(user_name)) {
-    // Not a valid OS Login username.
-    return PAM_IGNORE;
-  }
-
-  std::string users_filename = kUsersDir;
-  users_filename.append(user_name);
-  struct stat buffer;
-  bool file_exists = !stat(users_filename.c_str(), &buffer);
-
-  std::string str_user_name(user_name);
-  std::stringstream url;
-  url << kMetadataServerUrl << "users?username=" << UrlEncode(str_user_name);
-
-  std::string response;
-  long http_code = 0;
-  if (!HttpGet(url.str(), &response, &http_code) || response.empty() || http_code != 200) {
-    if (http_code == 404) {
-      // This module is only consulted for OS Login users.
-      return PAM_IGNORE;
-    }
-
-    // Check local file for that user as a last resort.
-    if (file_exists) {
-      return PAM_PERM_DENIED;
-    }
-
-    // We can't confirm this is an OS Login user, ignore module.
-    return PAM_IGNORE;
-  }
-
-  std::string email;
-  if (!ParseJsonToEmail(response, &email) || email.empty()) {
-    return PAM_AUTH_ERR;
-  }
-
-  url.str("");
-  url << kMetadataServerUrl << "authorize?email=" << UrlEncode(email) << "&policy=login";
-  if (!HttpGet(url.str(), &response, &http_code)) {
-    PAM_SYSLOG(pamh, LOG_INFO, "Failed to validate organization user %s has login permission.", user_name);
-    return PAM_PERM_DENIED;
-  }
-  if (http_code != 200) {
-    PAM_SYSLOG(pamh, LOG_INFO, 
-        "Failed to validate organization user %s has login permission, got HTTP response code %d.",
-        user_name, http_code);
-    return PAM_PERM_DENIED;
-  }
-  if (!ParseJsonToSuccess(response)) {
-    PAM_SYSLOG(pamh, LOG_INFO, "Organization user %s does not have login permission.", user_name);
-    if (file_exists) {
-      remove(users_filename.c_str());
-    }
-    return PAM_PERM_DENIED;
-  }
-
-  PAM_SYSLOG(pamh, LOG_INFO, "Organization user %s has login permission.", user_name);
-  if (!file_exists) {
-    std::ofstream users_file(users_filename.c_str());
-    chown(users_filename.c_str(), 0, 0);
-    chmod(users_filename.c_str(), S_IRUSR | S_IWUSR | S_IRGRP);
-  }
-  return PAM_SUCCESS;
-}
-
-PAM_EXTERN int pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv) {
-  return PAM_SUCCESS;
-}
-
-PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, const char **argv)
-{
-  const char* user_name;
   if (pam_get_user(pamh, &user_name, NULL) != PAM_SUCCESS) {
     PAM_SYSLOG(pamh, LOG_INFO, "Could not get pam user.");
     return PAM_PERM_DENIED;
@@ -153,14 +70,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, con
 
   response = "";
   if (!StartSession(email, &response)) {
-    PAM_SYSLOG(pamh, LOG_ERR, "Bad response from the two-factor start session request: %s",
+    PAM_SYSLOG(pamh, LOG_ERR, "Bad response from the two-factor start session "
+               "request: %s",
                response.empty() ? "empty response" : response.c_str());
     return PAM_PERM_DENIED;
   }
 
   std::string status;
   if (!ParseJsonToKey(response, "status", &status)) {
-    PAM_SYSLOG(pamh, LOG_ERR, "Failed to parse status from start session response");
+    PAM_SYSLOG(pamh, LOG_ERR, "Failed to parse status from start session "
+                              "response");
     return PAM_PERM_DENIED;
   }
 
@@ -175,7 +94,8 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, con
 
   std::vector<oslogin_utils::Challenge> challenges;
   if (!ParseJsonToChallenges(response, &challenges)) {
-    PAM_SYSLOG(pamh, LOG_ERR, "Failed to parse challenge values from JSON response");
+    PAM_SYSLOG(pamh, LOG_ERR, "Failed to parse challenge values from "
+                              "JSON response");
     return PAM_PERM_DENIED;
   }
 
@@ -191,12 +111,14 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, con
     std::stringstream prompt;
     prompt << "Please choose from the available authentication methods: ";
     for(vector<oslogin_utils::Challenge>::size_type i = 0;
-        i != challenges.size(); ++i)
+        i != challenges.size(); ++i) {
       prompt << "\n" << i+1 << ": " << user_prompts[challenges[i].type];
+    }
     prompt << "\n\nEnter the number for the authentication method to use: ";
 
     char *choice = NULL;
-    if (pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &choice, "%s", prompt.str().c_str()) != PAM_SUCCESS) {
+    if (pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &choice, "%s",
+                   prompt.str().c_str()) != PAM_SUCCESS) {
       pam_error(pamh, "Unable to get user input");
       return PAM_PERM_DENIED;
     }
@@ -206,6 +128,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, con
       pam_error(pamh, "Error parsing user input");
       return PAM_PERM_DENIED;
     }
+
     if (size_t(choicei) > challenges.size() || choicei <= 0) {
       pam_error(pamh, "Invalid option");
       return PAM_PERM_DENIED;
@@ -218,21 +141,23 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, con
   if (challenge.status != "READY") {
     // Call continueSession with the START_ALTERNATE flag.
     if (!ContinueSession(true, email, "", session_id, challenge, &response)) {
-      PAM_SYSLOG(pamh, LOG_ERR, "Bad response from two-factor continue session request: %s",
+      PAM_SYSLOG(pamh, LOG_ERR, "Bad response from two-factor continue session "
+                 "request: %s",
                  response.empty() ? "empty response" : response.c_str());
       return PAM_PERM_DENIED;
     }
   }
 
-  char* user_token = NULL;
+  char *user_token = NULL;
   if (challenge.type == INTERNAL_TWO_FACTOR) {
-    if (pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &user_token, "Enter your security code: ") != PAM_SUCCESS) {
+    if (pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &user_token,
+                   "Enter your security code: ") != PAM_SUCCESS) {
       pam_error(pamh, "Unable to get user input");
       return PAM_PERM_DENIED;
     }
   } else if (challenge.type == SECURITY_KEY_OTP) {
     if (pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &user_token,
-                   "Enter your security code by visiting g.co/sc: ") != PAM_SUCCESS) {
+        "Enter your security code by visiting https://g.co/sc: ") != PAM_SUCCESS) {
       pam_error(pamh, "Unable to get user input");
       return PAM_PERM_DENIED;
     }
@@ -262,8 +187,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc, con
     return PAM_PERM_DENIED;
   }
 
-  if (!ContinueSession(false, email, user_token, session_id, challenge, &response)) {
-      PAM_SYSLOG(pamh, LOG_ERR, "Bad response from two-factor continue session request: %s",
+  if (!ContinueSession(false, email, user_token, session_id,
+                       challenge, &response)) {
+      PAM_SYSLOG(pamh, LOG_ERR, "Bad response from two-factor continue "
+                 "session request: %s",
                  response.empty() ? "empty response" : response.c_str());
       return PAM_PERM_DENIED;
   }
