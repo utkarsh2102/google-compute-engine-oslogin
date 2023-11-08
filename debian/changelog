@@ -1,3 +1,10 @@
+google-compute-engine-oslogin (20231004.00-0ubuntu1) noble; urgency=medium
+
+  * New upstream version 20231004.00. (LP: #2043001)
+  * d/links: Update links w/ respective .so shipped
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Wed, 08 Nov 2023 10:19:01 +0200
+
 google-compute-engine-oslogin (20220714.00-0ubuntu1~18.04.0) bionic; urgency=medium
 
   * No-change rebuild for Bionic. (LP: #1995620)
