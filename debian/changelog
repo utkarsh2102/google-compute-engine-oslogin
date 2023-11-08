@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20231004.00-0ubuntu1~22.10.1) kinetic; urgency=medium
+
+  * No-change rebuild for Kinetic.
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Wed, 08 Nov 2023 11:31:07 +0200
+
 google-compute-engine-oslogin (20231004.00-0ubuntu1) noble; urgency=medium
 
   * New upstream version 20231004.00. (LP: #2043001)
