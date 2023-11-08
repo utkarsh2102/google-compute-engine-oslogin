@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20231004.00-0ubuntu1~22.04.1) jammy; urgency=medium
+
+  * No-change rebuild for Jammy.
+
+ -- Utkarsh Gupta <utkarsh@ubuntu.com>  Wed, 08 Nov 2023 11:33:39 +0200
+
 google-compute-engine-oslogin (20231004.00-0ubuntu1) noble; urgency=medium
 
   * New upstream version 20231004.00. (LP: #2043001)
