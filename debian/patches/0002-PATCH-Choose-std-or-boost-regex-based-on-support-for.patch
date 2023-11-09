@@ -14,8 +14,8 @@ Fixes #650.
 
 --- a/src/oslogin_utils.cc
 +++ b/src/oslogin_utils.cc
-@@ -28,9 +28,7 @@
- #include <sstream>
+@@ -32,9 +32,7 @@
+ 
  #include <json_object.h>
  
 -#if defined(__clang__) || __GNUC__ > 4 || \

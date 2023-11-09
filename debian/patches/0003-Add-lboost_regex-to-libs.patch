@@ -20,12 +20,12 @@ Subject: Add -lboost_regex to libs
  # Paths which should be overrideable.
 --- a/test/Makefile
 +++ b/test/Makefile
-@@ -8,7 +8,7 @@
- NEW_TEST_RUNNER = ./new_test_runner --gtest_output=xml
- CPPFLAGS += -I$(TOPDIR)/src/include -I/usr/include/json-c -I$(GTEST_DIR) -isystem $(GTEST_DIR)/include
- CXXFLAGS += -g -Wall -Wextra -std=c++11
+@@ -9,7 +9,7 @@
+ SSHCA_TEST_RUNNER = ./sshca_runner --gtest_output=xml --gtest_filter="SSHCATests.*"
+ CPPFLAGS += -I$(TOPDIR)/src/include -I$(TOPDIR)/third_party/include -I/usr/include/json-c -I$(GTEST_DIR) -isystem $(GTEST_DIR)/include
+ CXXFLAGS += -g -Wall -Wextra
 -LDLIBS = -lcurl -ljson-c -lpthread
 +LDLIBS = -lcurl -ljson-c -lpthread -lboost_regex
  
- all : test_runner new_test_runner non_network_tests
- 
+ .PHONY: all clean alltests ping reset
+ .PHONY: gtest prowtest non_network_tests network_tests
