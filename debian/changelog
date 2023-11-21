@@ -1,6 +1,6 @@
-google-compute-engine-oslogin (20231004.00-0ubuntu1~22.10.1) kinetic; urgency=medium
+google-compute-engine-oslogin (20231004.00-0ubuntu1~23.04.1) lunar; urgency=medium
 
-  * No-change rebuild for Kinetic.
+  * No-change rebuild for Lunar.
 
  -- Utkarsh Gupta <utkarsh@ubuntu.com>  Wed, 08 Nov 2023 11:31:07 +0200
 
