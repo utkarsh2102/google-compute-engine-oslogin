@@ -18,7 +18,8 @@ Package: google-compute-engine-oslogin
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         openssh-server
+         openssh-server,
+         google-guest-agent (>=20231004.02-0ubuntu3)
 Description: Google Compute Engine OS Login
  Contains libraries, applications and configurations for using OS Login
  on Google Compute Engine Virtual Machine Instances.
