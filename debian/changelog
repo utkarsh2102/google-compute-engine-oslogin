@@ -1,3 +1,10 @@
+google-compute-engine-oslogin (20231004.00-0ubuntu2) noble; urgency=medium
+
+  * d/control: There must be a dependency on `google-guest-agent`
+    to match the (upstream) Google managed d/control file (LP: #2052438)
+
+ -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Thu, 01 Feb 2024 00:06:38 +0000
+
 google-compute-engine-oslogin (20231004.00-0ubuntu1) noble; urgency=medium
 
   * New upstream version 20231004.00. (LP: #2043001)
