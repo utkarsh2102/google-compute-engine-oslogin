@@ -19,7 +19,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          openssh-server,
-         google-guest-agent (>=20231004.02-0ubuntu3)
+         google-guest-agent (>= 20231004.02)
 Description: Google Compute Engine OS Login
  Contains libraries, applications and configurations for using OS Login
  on Google Compute Engine Virtual Machine Instances.
