@@ -5,6 +5,12 @@ google-compute-engine-oslogin (20231004.00-0ubuntu1~20.04.3) focal; urgency=medi
 
  -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Tue, 06 Feb 2024 16:16:42 +0000
 
+google-compute-engine-oslogin (20231004.00-0ubuntu1~20.04.2) focal-security; urgency=medium
+
+  * No-change rebuild in the -security pocket.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 29 Jan 2024 10:29:44 -0500
+
 google-compute-engine-oslogin (20231004.00-0ubuntu1~20.04.1) focal; urgency=medium
 
   * No-change rebuild for Focal.
