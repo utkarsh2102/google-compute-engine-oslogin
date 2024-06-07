@@ -1,3 +1,10 @@
+google-compute-engine-oslogin (20231004.00-0ubuntu1~16.04.2) xenial; urgency=medium
+
+  * d/control: There must be a dependency on `google-guest-agent` 
+    to match the (upstream) Google managed d/control file (LP: #2052438) 
+
+ -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Fri, 07 Jun 2024 21:25:09 +0100
+
 google-compute-engine-oslogin (20231004.00-0ubuntu1~16.04.1) xenial; urgency=medium
 
   * No-change rebuild for Xenial.
