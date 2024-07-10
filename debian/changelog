@@ -1,3 +1,10 @@
+google-compute-engine-oslogin (20231004.00-0ubuntu5) oracular; urgency=medium
+
+  * d/p/0002-inherit-cflags.patch: inherit environment's build flags
+    (LP: #2071665).
+
+ -- Vladimir Petko <vladimir.petko@canonical.com>  Tue, 02 Jul 2024 10:15:17 +1200
+
 google-compute-engine-oslogin (20231004.00-0ubuntu4) noble; urgency=medium
 
   * No-change rebuild for CVE-2024-3094
