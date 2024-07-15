@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Requires libcurl4-openssl-dev libjson0 and libjson0-dev
+// Requires libcurl4-openssl-dev, libjson-c5, and libjson-c-dev
 #include <curl/curl.h>
 #include <errno.h>
 #include <grp.h>
@@ -48,7 +48,10 @@
 using std::string;
 
 // Maximum number of retries for HTTP requests.
-const int kMaxRetries = 1;
+const int kMaxRetries = 3;
+
+// Backoff duration 1 sec between retries.
+const int kBackoffDuration = 1;
 
 // Regex for validating user names.
 static const char kUserNameRegex[] = "^[a-zA-Z0-9._][a-zA-Z0-9._-]{0,31}$";
@@ -189,11 +192,29 @@ bool NssCache::GetNextGroup(BufferManager* buf, struct group* result, int* errno
   return ParseJsonToGroup(cached_passwd, result, buf, errnop);
 }
 
+// ParseJsonRoot is declared early here, away from the other parsing functions
+// found later (in the "JSON Parsing" section), so LoadJsonUsersToCache can
+// take advantage of the improved error handling ParseJsonRoot offers.
+json_object* ParseJsonRoot(const string& json) {
+  json_object* root = NULL;
+  struct json_tokener* tok = json_tokener_new();
+
+  root = json_tokener_parse_ex(tok, json.c_str(), -1);
+  if (root == NULL) {
+    enum json_tokener_error jerr = json_tokener_get_error(tok);
+    string error_message = json_tokener_error_desc(jerr);
+    SysLogErr("Failed to parse root JSON element: \"%s\", from input \"%s\"",
+              error_message, json);
+  }
+
+  json_tokener_free(tok);
+  return root;
+}
+
 bool NssCache::LoadJsonUsersToCache(string response) {
   Reset();
 
-  json_object* root = NULL;
-  root = json_tokener_parse(response.c_str());
+  json_object* root = ParseJsonRoot(response);
   if (root == NULL) {
     return false;
   }
@@ -392,6 +413,22 @@ size_t OnCurlWrite(void* buf, size_t size, size_t nmemb, void* userp) {
   return 0;
 }
 
+bool ShouldRetry(long http_code) {
+  if (http_code == 200) {
+    // Request returned successfully, no need to retry.
+    return false;
+  }
+  if (http_code == 404) {
+    // Metadata key does not exist, no point of retrying.
+    return false;
+  }
+  if (http_code == 400) {
+    // Request parameters are bad, no point of retrying.
+    return false;
+  }
+  return true;
+}
+
 bool HttpDo(const string& url, const string& data, string* response, long* http_code) {
   if (response == NULL || http_code == NULL) {
     return false;
@@ -410,6 +447,10 @@ bool HttpDo(const string& url, const string& data, string* response, long* http_
       return false;
     }
     do {
+      // Apply backoff strategy before retrying.
+      if (retry_count > 0) {
+        sleep(kBackoffDuration);
+      }
       response_stream.str("");
       response_stream.clear();
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
@@ -428,7 +469,7 @@ bool HttpDo(const string& url, const string& data, string* response, long* http_
         return false;
       }
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, http_code);
-    } while (retry_count++ < kMaxRetries && *http_code == 500);
+    } while (retry_count++ < kMaxRetries && ShouldRetry(*http_code));
     curl_slist_free_all(header_list);
   }
   *response = response_stream.str();
@@ -506,14 +547,12 @@ bool ValidatePasswd(struct passwd* result, BufferManager* buf, int* errnop) {
 // ----------------- JSON Parsing -----------------
 
 bool ParseJsonToUsers(const string& json, std::vector<string>* result) {
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
-  if (root == NULL) {
-    return false;
-  }
-
   bool ret = false;
 
+  json_object* root = ParseJsonRoot(json);
+  if (root == NULL) {
+    return ret;
+  }
   json_object* users = NULL;
   if (!json_object_object_get_ex(root, "usernames", &users)) {
     ret = true; // means no users, not invalid.
@@ -535,19 +574,22 @@ cleanup:
 }
 
 bool ParseJsonToGroups(const string& json, std::vector<Group>* result) {
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
-  if (root == NULL) {
-    return false;
-  }
-
   bool ret = false;
 
-  json_object* groups = NULL;
+  json_object* root = ParseJsonRoot(json);
+  if (root == NULL) {
+    return ret;
+  }
+  json_object* groups;
+  json_type groupType;
   if (!json_object_object_get_ex(root, "posixGroups", &groups)) {
+    SysLogErr("failed to parse POSIX groups from \"%s\"", json);
     goto cleanup;
   }
-  if (json_object_get_type(groups) != json_type_array) {
+  groupType = json_object_get_type(groups);
+  if (groupType != json_type_array) {
+    SysLogErr("parsed unexpected type for field \"posixGroups\"; "
+              "want a list, got %s", groupType);
     goto cleanup;
   }
   for (int idx = 0; idx < (int)json_object_array_length(groups); idx++) {
@@ -555,11 +597,12 @@ bool ParseJsonToGroups(const string& json, std::vector<Group>* result) {
 
     json_object* gid;
     if (!json_object_object_get_ex(group, "gid", &gid)) {
+      SysLogErr("failed to parse gid from group %s", json_object_get_string(group));
       goto cleanup;
     }
-
     json_object* name;
     if (!json_object_object_get_ex(group, "name", &name)) {
+      SysLogErr("failed to parse name from group %s", json_object_get_string(group));
       goto cleanup;
     }
 
@@ -589,22 +632,19 @@ cleanup:
 
 bool ParseJsonToGroup(const string& json, struct group* result, BufferManager*
                       buf, int* errnop) {
+  bool ret = false;
   *errnop = EINVAL;
   int gr_gid = 65535;
 
-  json_object* group = NULL;
-  group = json_tokener_parse(json.c_str());
+  json_object* group = ParseJsonRoot(json);
   if (group == NULL) {
     return false;
   }
-
-  bool ret = false;
 
   json_object* gid;
   if (!json_object_object_get_ex(group, "gid", &gid)) {
     goto cleanup;
   }
-
   json_object* name;
   if (!json_object_object_get_ex(group, "name", &name)) {
     goto cleanup;
@@ -631,16 +671,13 @@ cleanup:
 
 std::vector<string> ParseJsonToSshKeys(const string& json) {
   std::vector<string> result;
-  json_object* ssh_public_keys = NULL;
-
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
+  json_object* root = ParseJsonRoot(json);
   if (root == NULL) {
     return result;
   }
 
   // Locate the sshPublicKeys object.
-  json_object* login_profiles = NULL;
+  json_object* login_profiles;
   if (!json_object_object_get_ex(root, "loginProfiles", &login_profiles)) {
     goto cleanup;
   }
@@ -649,6 +686,7 @@ std::vector<string> ParseJsonToSshKeys(const string& json) {
   }
   login_profiles = json_object_array_get_idx(login_profiles, 0);
 
+  json_object* ssh_public_keys;
   if (!json_object_object_get_ex(login_profiles, "sshPublicKeys", &ssh_public_keys)) {
     goto cleanup;
   }
@@ -701,16 +739,14 @@ cleanup:
 
 std::vector<string> ParseJsonToSshKeysSk(const string& json) {
   std::vector<string> result;
-  json_object* security_keys = NULL;
 
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
+  json_object* root = ParseJsonRoot(json);
   if (root == NULL) {
     return result;
   }
 
   // Locate the securityKeys array.
-  json_object* login_profiles = NULL;
+  json_object* login_profiles;
   if (!json_object_object_get_ex(root, "loginProfiles", &login_profiles)) {
     goto cleanup;
   }
@@ -720,9 +756,11 @@ std::vector<string> ParseJsonToSshKeysSk(const string& json) {
 
   login_profiles = json_object_array_get_idx(login_profiles, 0);
 
+  json_object* security_keys;
   if (!json_object_object_get_ex(login_profiles, "securityKeys", &security_keys)) {
     goto cleanup;
   }
+
   if (json_object_get_type(security_keys) != json_type_array) {
     goto cleanup;
   }
@@ -757,19 +795,18 @@ cleanup:
 
 bool ParseJsonToPasswd(const string& json, struct passwd* result, BufferManager*
                        buf, int* errnop) {
+  bool ret = false;
   *errnop = EINVAL;
   json_object* root = NULL;
   json_object* origroot = NULL;
 
-  origroot = root = json_tokener_parse(json.c_str());
+  origroot = root = ParseJsonRoot(json);
   if (root == NULL) {
     return false;
   }
 
-  bool ret = false;
-  json_object* posix_accounts = NULL;
-
-  json_object* login_profiles = NULL;
+  json_object* posix_accounts;
+  json_object* login_profiles;
   // If this is called from getpwent_r, loginProfiles won't be in the response.
   if (json_object_object_get_ex(root, "loginProfiles", &login_profiles)) {
     if (json_object_get_type(login_profiles) != json_type_array) {
@@ -888,17 +925,16 @@ bool AddUsersToGroup(std::vector<string> users, struct group* result,
 }
 
 bool ParseJsonToEmail(const string& json, string* email) {
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
+  bool ret = false;
+
+  json_object* root = ParseJsonRoot(json);
   if (root == NULL) {
-    return false;
+    return ret;
   }
 
-  bool ret = false;
-  json_object* json_email = NULL;
-
   // Locate the email object.
-  json_object* login_profiles = NULL;
+  json_object* login_profiles;
+  json_object* json_email;
   if (!json_object_object_get_ex(root, "loginProfiles", &login_profiles)) {
     goto cleanup;
   }
@@ -918,8 +954,7 @@ cleanup:
 }
 
 bool ParseJsonToSuccess(const string& json) {
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
+  json_object* root = ParseJsonRoot(json);
   if (root == NULL) {
     return false;
   }
@@ -934,17 +969,15 @@ bool ParseJsonToSuccess(const string& json) {
 }
 
 bool ParseJsonToKey(const string& json, const string& key, string* response) {
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
+  bool ret = false;
+
+  json_object* root = ParseJsonRoot(json);
   if (root == NULL) {
-    return false;
+    return ret;
   }
 
-  bool ret = false;
   json_object* json_response = NULL;
   const char* c_response = NULL;
-
-
   if (!json_object_object_get_ex(root, key.c_str(), &json_response)) {
     goto cleanup;
   }
@@ -962,13 +995,13 @@ cleanup:
 }
 
 bool ParseJsonToChallenges(const string& json, std::vector<Challenge>* challenges) {
-  json_object* root = NULL;
-  root = json_tokener_parse(json.c_str());
+  bool ret = false;
+
+  json_object* root = ParseJsonRoot(json);
   if (root == NULL) {
-    return false;
+    return ret;
   }
 
-  bool ret = false;
   json_object* challengeId = NULL;
   json_object* challengeType = NULL;
   json_object* challengeStatus = NULL;
@@ -1260,18 +1293,18 @@ static bool ApplyPolicy(const char *user_name, string email, const char *policy,
   long http_code = 0;
   // Invalid user, just leave from here - the principal will not be allowed/authorized.
   if (!HttpGet(url.str(), &response, &http_code)) {
-    SysLogErr("Failed to validate organization user %s has login permission.", user_name);
+    SysLogErr("Failed to validate that OS Login user %s has %s permission.", user_name, policy);
     return false;
   }
 
   if (http_code != 200) {
-    SysLogErr("Failed to validate organization user %s has login permission, "
-              "got HTTP response code: %lu", user_name, http_code);
+    SysLogErr("Failed to validate that OS Login user %s has %s permission; "
+              "got HTTP response code: %lu", user_name, policy, http_code);
     return false;
   }
 
   if (!ParseJsonToSuccess(response)) {
-    SysLogErr("Organization user %s does not have login permission.", user_name);
+    SysLogErr("OS Login user %s does not have %s permission.", user_name, policy);
     return false;
   }
 
@@ -1369,6 +1402,9 @@ bool AuthorizeUser(const char *user_name, struct AuthOptions opts, string *user_
     }
   } else {
     remove(sudoers_filename.c_str());
+    if (opts.admin_policy_required) {
+      return false;
+    }
   }
 
   return true;
