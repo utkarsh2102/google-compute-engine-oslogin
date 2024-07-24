@@ -1,5 +1,9 @@
 google-compute-engine-oslogin (20240701.00-0ubuntu1) oracular; urgency=medium
 
+  [ Utkarsh Gupta ]
+  * d/links: Update links w/ respective .so shipped
+
+  [ Chloé 'kajiya' Smith ]
   * New upstream version for upstream tag 20240320.00. (LP: #2073166)
 
  -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Mon, 15 Jul 2024 17:56:01 +0100
