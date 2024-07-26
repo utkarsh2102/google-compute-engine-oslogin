@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20240701.00-0ubuntu1~22.04.0) jammy; urgency=medium
+
+  * No-change rebuild for Jammy Jellyfish (LP: #2073166)
+
+ -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Fri, 26 Jul 2024 15:21:39 +0100
+
 google-compute-engine-oslogin (20240701.00-0ubuntu1) oracular; urgency=medium
 
   [ Utkarsh Gupta ]
