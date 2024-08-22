@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20240701.00-0ubuntu1~18.04.0) bionic; urgency=medium
+
+  * Rebuild for Bionic Beaver (LP: #2073166)
+
+ -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Thu, 22 Aug 2024 19:05:20 +0100
+
 google-compute-engine-oslogin (20240701.00-0ubuntu1) oracular; urgency=medium
 
   [ Utkarsh Gupta ]
