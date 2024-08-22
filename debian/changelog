@@ -1,3 +1,9 @@
+google-compute-engine-oslogin (20240701.00-0ubuntu1~16.04.0) xenial; urgency=medium
+
+  * Rebuild for Xenial Xerus (LP: #2073166) 
+
+ -- Chloé 'kajiya' Smith <chloe.smith@canonical.com>  Thu, 22 Aug 2024 19:25:25 +0100
+
 google-compute-engine-oslogin (20240701.00-0ubuntu1) oracular; urgency=medium
 
   [ Utkarsh Gupta ]
